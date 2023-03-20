@@ -1,0 +1,29 @@
+version: '3.9'
+
+services:
+
+  postgres-db:
+    container_name: ${PROJECT_NAME}-postgres-db
+    image: postgres:alpine
+    hostname: postgres
+    restart: always
+    env_file:
+      - .docker_env
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - ${POSTGRES_PATH}/${PROJECT_NAME}/${POSTGRES_DATABASE}/:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  prisma-studio:
+    container_name: ${PROJECT_NAME}-prisma-studio
+    image: timothyjmiller/prisma-studio:latest
+    restart: unless-stopped
+    env_file:
+      - .docker_env
+    ports:
+      - ${PRISMA_STUDIO_PORT}:5555
