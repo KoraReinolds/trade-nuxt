@@ -3,7 +3,8 @@ import { Account } from "tinkoff-invest-api/cjs/generated/users";
 
 export class TinkoffAPI {
   cacheDir = ".cache";
-  accounts: Account[] | null = null;
+  accounts: Account[] | undefined;
+  account: Account | undefined;
   static api: TinkoffInvestApi;
 
   constructor() {
@@ -21,5 +22,12 @@ export class TinkoffAPI {
 
     this.accounts = accounts;
     return accounts;
+  }
+
+  async getAccountById(id: string) {
+    if (!this.accounts) this.accounts = await this.getAccounts();
+
+    this.account = this.accounts.filter((acc) => acc.id === id)[0];
+    return this.account;
   }
 }
