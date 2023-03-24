@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import { TinkoffInvestApi } from "tinkoff-invest-api";
 import { Account } from "tinkoff-invest-api/cjs/generated/users";
 
@@ -15,6 +17,13 @@ export class TinkoffAPI {
         token,
       });
     }
+  }
+
+  async getCacheDirs() {
+    const files = await fs.promises.readdir(
+      path.join(this.cacheDir, "candles")
+    );
+    return files;
   }
 
   async getAccounts() {
