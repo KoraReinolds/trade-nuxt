@@ -1,7 +1,9 @@
 <template>
   <div>
-    <ShareList />
+    <ShareList :figi="cachedShares || []" />
   </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const cachedShares = ref((await useFetch("/api/shares/cache")).data);
+</script>
