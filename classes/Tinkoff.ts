@@ -19,9 +19,9 @@ export class TinkoffAPI {
     }
   }
 
-  async getCacheDirs() {
+  async getCachedFiles(dirs: string[] = []) {
     const files = await fs.promises.readdir(
-      path.join(this.cacheDir, "candles")
+      path.join(this.cacheDir, "candles", ...dirs)
     );
     return files;
   }

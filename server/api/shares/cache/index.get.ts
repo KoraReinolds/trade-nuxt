@@ -1,7 +1,7 @@
 import { TinkoffAPI } from "~~/classes/Tinkoff";
 
-export default defineEventHandler(async () => {
-  const api = new TinkoffAPI();
+const api = new TinkoffAPI();
 
-  return await api.getCacheDirs();
+export default defineEventHandler(async () => {
+  return await api.getCachedFiles();
 });
