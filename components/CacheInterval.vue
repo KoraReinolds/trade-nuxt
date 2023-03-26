@@ -5,7 +5,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   figi: string;
-  interval: "1_min" | "5_min" | "15_min ";
+  interval: "1_min" | "5_min" | "15_min";
 }>();
 
 const cache = (

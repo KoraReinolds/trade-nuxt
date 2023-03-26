@@ -6,7 +6,7 @@ let d: Shares[] = [];
 
 const loadSharesToDb = () => {
   d = [];
-  return new Promise((_resolve) =>
+  return new Promise<Shares[]>((_resolve) =>
     fs
       .createReadStream("./shares.csv")
       .pipe(csv())

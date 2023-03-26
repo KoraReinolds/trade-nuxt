@@ -16,15 +16,26 @@ const route = useRoute();
 const props = defineProps<{
   figi?: string[];
 }>();
+const getShares = async () => {
+  const sharesRes = await useFetch("/api/shares", {
+    query: {
+      skip: route.query.skip,
+      take: route.query.take,
+      figi: props.figi ? props.figi.join(",") : undefined,
+    },
+  });
+  return sharesRes.data.value;
+};
+
+const shares = ref(await getShares());
 
 const parseShares = async () => {
-  await useFetch("/api/shares", { method: "POST", body: shares });
+  const sharesRes = await useFetch("/api/shares/parse");
+  const body = sharesRes.data.value;
+  await useFetch("/api/shares", {
+    method: "POST",
+    body,
+  });
+  shares.value = await getShares();
 };
-const { data: shares } = await useFetch("/api/shares", {
-  query: {
-    skip: route.query.skip,
-    take: route.query.take,
-    figi: props.figi ? props.figi.join(",") : undefined,
-  },
-});
 </script>
