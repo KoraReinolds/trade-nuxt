@@ -1,5 +1,5 @@
 <template>
-  <div>{{ startInterval }} - {{ endInterval }}</div>
+  <div @click="cacheNextCandles">{{ startInterval }} - {{ endInterval }}</div>
 </template>
 
 <script setup lang="ts">
@@ -9,14 +9,19 @@ const props = defineProps<{
   figi: string;
   interval: IntervalKeys;
 }>();
-
-const cache = (
-  await useFetch(["/api/candles", props.figi, props.interval].join("/"))
-).data;
+const datesDir = ["/api/candles", props.figi, props.interval].join("/");
+const cache = (await useFetch(datesDir)).data;
 const startInterval = ref("");
 const endInterval = ref("");
 if (Array.isArray(cache.value)) {
   startInterval.value = cache.value[0].split(".")[0];
   endInterval.value = cache.value.at(-1).split(".")[0];
 }
+const cacheNextCandles = async () => {
+  const nextDate = new Date(+new Date(endInterval.value) + 1000 * 3600 * 24)
+    .toISOString()
+    .split("T")[0];
+  await useFetch([datesDir, nextDate].join("/"));
+  endInterval.value = nextDate;
+};
 </script>
