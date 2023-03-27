@@ -14,6 +14,28 @@ model User {
 }
 
 model Shares {
-  figi   String @unique
-  ticker String
+  figi    String    @unique
+  ticker  String
+  Candles Candles[]
+}
+
+model Candles {
+  id     Int        @id @default(autoincrement())
+  type   CandleType
+  time   DateTime
+  low    Float
+  high   Float
+  open   Float
+  close  Float
+  volume Int
+  figi   Shares     @relation(fields: [shares], references: [figi])
+  shares String
+
+  @@unique([shares, time, type])
+}
+
+enum CandleType {
+  CANDLE_INTERVAL_1_MIN
+  CANDLE_INTERVAL_5_MIN
+  CANDLE_INTERVAL_15_MIN
 }

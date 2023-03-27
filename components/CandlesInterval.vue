@@ -1,5 +1,5 @@
 <template>
-  <div>{{ figi }} - {{ candles?.length }}</div>
+  <div @click="saveCandles">{{ figi }} - {{ candles?.length }}</div>
 </template>
 
 <script setup lang="ts">
@@ -14,7 +14,13 @@ const props = defineProps<{
 
 const candles = (
   await useFetch(
-    `/api/candles/${props.figi}/${props.interval}/${props.date}?offset=${props.offset}`
+    `/api/candles/${props.figi}/${props.interval}/${props.date}?offset=${props.offset}&db=true`
   )
 ).data.value?.candles;
+const saveCandles = async () => {
+  await useFetch(`/api/candles?figi=${props.figi}&interval=${props.interval}`, {
+    method: "POST",
+    body: candles,
+  });
+};
 </script>

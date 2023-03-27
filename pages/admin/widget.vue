@@ -3,7 +3,7 @@
     <CandlesInterval
       v-for="figi in cachedShares"
       :key="figi"
-      :figi="figi"
+      :figi="figi.toString()"
       :offset="offset"
       :date="date"
       :interval="interval"
