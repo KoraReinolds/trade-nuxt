@@ -1,7 +1,5 @@
 <template>
-  <div @click="endInterval ? cacheNextCandles() : cacheFirstCandle()">
-    {{ startInterval }} - {{ endInterval }}
-  </div>
+  <div @click="cacheCandles">{{ startInterval }} - {{ endInterval }}</div>
 </template>
 
 <script setup lang="ts">
@@ -20,16 +18,21 @@ if (Array.isArray(cache.value)) {
   startInterval.value = cache.value[0].split(".")[0];
   endInterval.value = cache.value.at(-1).split(".")[0];
 }
-const cacheNextCandles = async () => {
-  const nextDate = new Date(+new Date(endInterval.value) + 1000 * 3600 * 24)
-    .toISOString()
-    .split("T")[0];
-  await useFetch([datesDir, nextDate].join("/"));
-  endInterval.value = nextDate;
+const formatDate = (date: Date) => {
+  return date.toISOString().split("T")[0];
 };
-const cacheFirstCandle = async () => {
-  await useFetch([datesDir, startDate].join("/"));
-  startInterval.value = startDate;
-  endInterval.value = startDate;
+const today = formatDate(new Date(Date.now()));
+const cacheCandles = async () => {
+  if (endInterval.value !== today) {
+    const nextDate = endInterval.value
+      ? formatDate(new Date(+new Date(endInterval.value) + 1000 * 3600 * 24))
+      : startDate;
+    const res = await useFetch([datesDir, nextDate].join("/"));
+    if (!res.error.value) {
+      if (!startInterval.value) startInterval.value = startDate;
+      endInterval.value = nextDate;
+    }
+    setTimeout(cacheCandles, res.error.value ? 60000 : 0);
+  }
 };
 </script>
