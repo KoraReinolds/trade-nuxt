@@ -3,13 +3,15 @@
 </template>
 
 <script setup lang="ts">
+import { IntervalKeys } from "~~/types/IntervalMap";
+
 const props = defineProps<{
   figi: string;
-  interval: "1_min" | "5_min" | "15_min";
+  interval: IntervalKeys;
 }>();
 
 const cache = (
-  await useFetch(["/api/shares/cache", props.figi, props.interval].join("/"))
+  await useFetch(["/api/candles", props.figi, props.interval].join("/"))
 ).data;
 const startInterval = ref("");
 const endInterval = ref("");

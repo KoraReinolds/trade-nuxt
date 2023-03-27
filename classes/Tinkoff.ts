@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { TinkoffInvestApi } from "tinkoff-invest-api";
+import { CandlesLoader, TinkoffInvestApi } from "tinkoff-invest-api";
+import { GetCandlesRequest } from "tinkoff-invest-api/cjs/generated/marketdata";
 import { Account } from "tinkoff-invest-api/cjs/generated/users";
 
 export class TinkoffAPI {
@@ -38,5 +39,16 @@ export class TinkoffAPI {
 
     this.account = this.accounts.filter((acc) => acc.id === id)[0];
     return this.account;
+  }
+
+  async getCandles(params: GetCandlesRequest) {
+    const candlesLoader = new CandlesLoader(TinkoffAPI.api, {
+      cacheDir: this.cacheDir,
+    });
+    try {
+      return await candlesLoader.getCandles(params);
+    } catch (err) {
+      throw new Error("Get candles error");
+    }
   }
 }

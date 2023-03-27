@@ -1,15 +1,20 @@
 import * as fs from "fs";
 import * as path from "path";
-import { HistoricCandle } from "tinkoff-invest-api/cjs/generated/marketdata";
+import {
+  HistoricCandle,
+  CandleInterval,
+} from "tinkoff-invest-api/cjs/generated/marketdata";
+import { Helpers } from "tinkoff-invest-api";
 import getDateDirs from "../index.get";
 import { TinkoffAPI } from "~~/classes/Tinkoff";
+import { IntervalKeys, IntervalMap } from "~~/types/IntervalMap";
 
 const api = new TinkoffAPI();
 
 export default defineEventHandler(async (event) => {
   const params = event.context.params;
   const figi = params?.figi || "";
-  const interval = params?.interval || "";
+  const interval = params?.interval as IntervalKeys;
   const date = params?.date || "";
   const fileName = date + ".json";
   const dateList = await getDateDirs(event);
@@ -39,5 +44,9 @@ export default defineEventHandler(async (event) => {
     );
   }
 
-  throw new Error("Candle with date " + date + " is not cached");
+  return await api.getCandles({
+    figi,
+    interval: CandleInterval[IntervalMap[interval]],
+    ...Helpers.fromTo("1d", new Date(date)),
+  });
 });

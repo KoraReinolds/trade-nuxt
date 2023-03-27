@@ -5,5 +5,5 @@
 </template>
 
 <script setup lang="ts">
-const cachedShares = ref((await useFetch("/api/shares/cache")).data);
+const cachedShares = ref((await useFetch("/api/candles")).data);
 </script>
