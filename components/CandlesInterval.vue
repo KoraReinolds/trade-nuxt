@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const candles = (
   await useFetch(
-    `/api/candles/${props.figi}/${props.interval}/${props.date}?offset=${props.offset}&db=true`
+    `/api/candles/${props.figi}/${props.interval}/${props.date}/db?offset=${props.offset}`
   )
 ).data.value?.candles;
 const saveCandles = async () => {
