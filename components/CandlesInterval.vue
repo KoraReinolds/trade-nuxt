@@ -9,6 +9,7 @@
 
 <script setup lang="ts">
 import { Candles } from ".prisma/client";
+import * as THREE from "three";
 import { IntervalKeys } from "~~/types/IntervalMap";
 import { TradeShare } from "~~/classes/Share";
 import { Widget } from "~~/classes/Widget";
@@ -37,6 +38,8 @@ const saveCandles = async () => {
   });
 };
 
+const shaders = (await useFetch("/api/shaders")).data.value;
+
 function main() {
   const canvas: HTMLElement | null = document.querySelector(
     `#${props.figi}-canvas`
@@ -46,7 +49,16 @@ function main() {
     axisHelper: true,
     orbitControls: true,
   });
-  console.log(widget);
+  const planeGeo = new THREE.PlaneGeometry();
+  const planeMat = new THREE.ShaderMaterial({
+    fragmentShader: shaders?.fragment || ``,
+    vertexShader: shaders?.vertex || ``,
+    transparent: true,
+  });
+  planeMat.side = THREE.DoubleSide;
+  const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+  widget.scene.add(planeMesh);
+  planeMesh.position.set(0.5, 0.5, 0);
 }
 
 onMounted(main);

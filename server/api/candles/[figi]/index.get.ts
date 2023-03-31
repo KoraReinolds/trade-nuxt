@@ -1,7 +1,7 @@
 import getFigiDirs from "../index.get";
-import { TinkoffAPI } from "~~/classes/Tinkoff";
+import { TradeFileLoader } from "~~/classes/FileLoader";
 
-const api = new TinkoffAPI();
+const fl = new TradeFileLoader();
 
 export default defineEventHandler(async (event) => {
   const figi = event.context.params?.figi;
@@ -11,5 +11,5 @@ export default defineEventHandler(async (event) => {
     throw new Error("shares with figi=" + figi + " is not found");
   }
 
-  return await api.getCachedFiles([figi]);
+  return await fl.getCachedFiles([figi]);
 });

@@ -1,7 +1,7 @@
 import getIntervalDirs from "../index.get";
-import { TinkoffAPI } from "~~/classes/Tinkoff";
+import { TradeFileLoader } from "~~/classes/FileLoader";
 
-const api = new TinkoffAPI();
+const fl = new TradeFileLoader();
 
 export default defineEventHandler(async (event) => {
   const params = event.context.params;
@@ -12,5 +12,5 @@ export default defineEventHandler(async (event) => {
     throw new Error("interval is not cached yet");
   }
 
-  return await api.getCachedFiles([params?.figi || "", params?.interval || ""]);
+  return await fl.getCachedFiles([params?.figi || "", params?.interval || ""]);
 });

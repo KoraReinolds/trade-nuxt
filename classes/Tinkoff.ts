@@ -1,13 +1,11 @@
-import * as fs from "fs";
-import * as path from "path";
 import { CandlesLoader, TinkoffInvestApi } from "tinkoff-invest-api";
 import { GetCandlesRequest } from "tinkoff-invest-api/cjs/generated/marketdata";
 import { Account } from "tinkoff-invest-api/cjs/generated/users";
 
 export class TinkoffAPI {
-  cacheDir = ".cache";
   accounts: Account[] | undefined;
   account: Account | undefined;
+  static cacheDir = ".cache";
   static api: TinkoffInvestApi;
 
   constructor() {
@@ -18,13 +16,6 @@ export class TinkoffAPI {
         token,
       });
     }
-  }
-
-  async getCachedFiles(dirs: string[] = []) {
-    const files = await fs.promises.readdir(
-      path.join(this.cacheDir, "candles", ...dirs)
-    );
-    return files;
   }
 
   async getAccounts() {
@@ -43,7 +34,7 @@ export class TinkoffAPI {
 
   async getCandles(params: GetCandlesRequest) {
     const candlesLoader = new CandlesLoader(TinkoffAPI.api, {
-      cacheDir: this.cacheDir,
+      cacheDir: TinkoffAPI.cacheDir,
     });
     try {
       return await candlesLoader.getCandles(params);
