@@ -54,13 +54,16 @@ function main() {
   const planeMat = new THREE.ShaderMaterial({
     uniforms: {
       u_resolution: {
-        value: new THREE.Vector2(canvas.clientWidth, canvas.clientHeight),
+        value: widget.getCanvasSize(),
       },
       u_grid: { value: new THREE.Vector2(candles.length, 4) },
     },
     fragmentShader: shaders?.fragment || ``,
     vertexShader: shaders?.vertex || ``,
     transparent: true,
+  });
+  widget.addActionBeforeRender(() => {
+    planeMat.uniforms.u_resolution.value = widget.getCanvasSize();
   });
   planeMat.side = THREE.DoubleSide;
   const planeMesh = new THREE.Mesh(planeGeo, planeMat);

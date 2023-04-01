@@ -11,6 +11,7 @@ const defaultOptions: IOptions = {
 };
 
 export class Widget {
+  beforeRender: Function[] = [];
   canvas: HTMLElement;
   renderer: THREE.Renderer;
   scene: THREE.Scene;
@@ -56,6 +57,14 @@ export class Widget {
     return needResize;
   }
 
+  getCanvasSize() {
+    return new THREE.Vector2(this.canvas.clientWidth, this.canvas.clientHeight);
+  }
+
+  addActionBeforeRender(f: Function) {
+    this.beforeRender.push(f);
+  }
+
   render() {
     if (this.controls) this.controls.update();
 
@@ -63,8 +72,7 @@ export class Widget {
       const canvas = this.renderer.domElement;
       const aspect = canvas.clientWidth / canvas.clientHeight;
       if (aspect > 1) {
-        this.camera.top = 0.5 + 0.5 / aspect;
-        this.camera.bottom = 0.5 - 0.5 / aspect;
+        this.camera.top = 1 / aspect;
       } else {
         this.camera.left = 1 - aspect;
       }
@@ -72,7 +80,7 @@ export class Widget {
     }
 
     this.renderer.render(this.scene, this.camera);
-
+    this.beforeRender.forEach((f) => f());
     requestAnimationFrame(this.render.bind(this));
   }
 
