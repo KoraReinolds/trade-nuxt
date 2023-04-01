@@ -1,7 +1,7 @@
 <template>
-  <div v-if="candles?.length" class="h-full w-full relative">
+  <div v-if="candles.length" class="h-full w-full relative">
     <div class="absolute top-0 left-0 text-gray-400" @click="saveCandles">
-      {{ figi }} - {{ candles?.length }}
+      {{ figi }} - {{ candles.length }}
     </div>
     <canvas :id="`${props.figi}-canvas`" class="h-full w-full"></canvas>
   </div>
@@ -21,11 +21,12 @@ const props = defineProps<{
   offset: string;
 }>();
 
-const candles = (
-  await useFetch(
-    `/api/candles/${props.figi}/${props.interval}/${props.date}/db?offset=${props.offset}`
-  )
-).data.value?.candles;
+const candles =
+  (
+    await useFetch(
+      `/api/candles/${props.figi}/${props.interval}/${props.date}/db?offset=${props.offset}`
+    )
+  ).data.value?.candles || [];
 if (candles) {
   // TODO: figure out with SerializeObject type
   const tradeShare = new TradeShare(candles as unknown as Candles[]);
@@ -51,6 +52,12 @@ function main() {
   });
   const planeGeo = new THREE.PlaneGeometry();
   const planeMat = new THREE.ShaderMaterial({
+    uniforms: {
+      u_resolution: {
+        value: new THREE.Vector2(canvas.clientWidth, canvas.clientHeight),
+      },
+      u_grid: { value: new THREE.Vector2(candles.length, 4) },
+    },
     fragmentShader: shaders?.fragment || ``,
     vertexShader: shaders?.vertex || ``,
     transparent: true,
