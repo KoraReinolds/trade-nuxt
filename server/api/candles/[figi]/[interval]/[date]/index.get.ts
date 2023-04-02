@@ -12,12 +12,19 @@ export default defineEventHandler(async (event) => {
   const figi = params?.figi || "";
   const interval = params?.interval as IntervalKeys;
   const date = params?.date || "";
-  const { from, to } = Helpers.fromTo(offset, new Date(date));
+  let dates = {};
+  if (query.end) {
+    dates = {
+      from: new Date(date),
+      to: new Date(query.end.toString() || ""),
+    };
+  } else {
+    dates = Helpers.fromTo(offset, new Date(date));
+  }
 
   return await api.getCandles({
     figi,
     interval: CandleInterval[IntervalMap[interval]],
-    from,
-    to,
+    ...dates,
   });
 });

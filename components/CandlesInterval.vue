@@ -1,6 +1,6 @@
 <template>
   <div v-if="candles.length" class="h-full w-full relative">
-    <div class="absolute top-0 left-0 text-gray-400" @click="saveCandles">
+    <div class="absolute top-0 left-0 text-gray-400">
       {{ figi }} - {{ candles.length }}
     </div>
     <canvas :id="`${props.figi}-canvas`" class="h-full w-full"></canvas>
@@ -39,12 +39,6 @@ const candleTexture = new THREE.DataTexture(
   THREE.FloatType
 );
 candleTexture.needsUpdate = true;
-const saveCandles = async () => {
-  await useFetch(`/api/candles?figi=${props.figi}&interval=${props.interval}`, {
-    method: "POST",
-    body: candles,
-  });
-};
 
 const shaders = (await useFetch("/api/shaders")).data.value;
 
