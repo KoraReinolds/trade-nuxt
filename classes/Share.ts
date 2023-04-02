@@ -14,6 +14,23 @@ export class TradeShare {
     this.dateCandles = this.parseCandles(data);
   }
 
+  getTextureData() {
+    const candleData = this.candles;
+    const numCandles = this.candles.length;
+    const width = numCandles;
+    const height = 4;
+    const data = new Float32Array(width * height);
+
+    for (let i = 0; i < numCandles; i++) {
+      data[i * height] = candleData[i].open;
+      data[i * height + 1] = candleData[i].high;
+      data[i * height + 2] = candleData[i].low;
+      data[i * height + 3] = candleData[i].close;
+    }
+
+    return data;
+  }
+
   parseCandles(data: Candles[]) {
     const res: Record<string, Candles> = {};
 

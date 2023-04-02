@@ -27,11 +27,18 @@ const candles =
       `/api/candles/${props.figi}/${props.interval}/${props.date}/db?offset=${props.offset}`
     )
   ).data.value?.candles || [];
-if (candles) {
-  // TODO: figure out with SerializeObject type
-  const tradeShare = new TradeShare(candles as unknown as Candles[]);
-  tradeShare.addMA(60);
-}
+// TODO: figure out with SerializeObject type
+const tradeShare = new TradeShare(candles as unknown as Candles[]);
+tradeShare.addMA(60);
+const data = tradeShare.getTextureData();
+const candleTexture = new THREE.DataTexture(
+  data,
+  candles.length,
+  1,
+  THREE.RGBAFormat,
+  THREE.FloatType
+);
+candleTexture.needsUpdate = true;
 const saveCandles = async () => {
   await useFetch(`/api/candles?figi=${props.figi}&interval=${props.interval}`, {
     method: "POST",
@@ -53,10 +60,10 @@ function main() {
   const planeGeo = new THREE.PlaneGeometry();
   const planeMat = new THREE.ShaderMaterial({
     uniforms: {
-      u_resolution: {
-        value: widget.getCanvasSize(),
-      },
+      u_resolution: { value: widget.getCanvasSize() },
       u_grid: { value: new THREE.Vector2(candles.length, 4) },
+      u_grid_offset: { value: new THREE.Vector2(0, 0) },
+      u_candles: { value: candleTexture },
     },
     fragmentShader: shaders?.fragment || ``,
     vertexShader: shaders?.vertex || ``,

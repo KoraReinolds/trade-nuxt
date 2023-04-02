@@ -5,6 +5,8 @@
 varying vec2 st;
 uniform vec2 u_resolution;
 uniform vec2 u_grid;
+uniform vec2 u_grid_offset;
+uniform sampler2D u_candles;
 
 float fill(float v,float th){
   return step(v,th);
@@ -38,8 +40,10 @@ void main(){
   float grid_scale=max(1.,aspect);
   
   scene=mix(scene,RGB_GRAY_2,
-    grid(uv,u_grid,pixel_size)
+    grid(uv+u_grid_offset,u_grid,pixel_size)
   );
   
-  gl_FragColor=vec4(scene,1.);
+  vec4 candleData=texture2D(u_candles,vec2(0,0));
+  
+  gl_FragColor=vec4(candleData);
 }
