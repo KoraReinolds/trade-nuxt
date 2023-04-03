@@ -33,7 +33,5 @@ export default defineEventHandler(async (event) => {
       time: true,
     },
   });
-  return {
-    candles,
-  };
+  return candles || [];
 });

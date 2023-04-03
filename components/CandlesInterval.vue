@@ -1,14 +1,14 @@
 <template>
-  <div v-if="candles.length" class="h-full w-full relative">
+  <div v-if="tradeShare.size.value" class="h-full w-full relative">
     <div class="absolute top-0 left-0 text-gray-400">
-      {{ figi }} - {{ candles.length }}
+      {{ figi }} - {{ tradeShare.size }}
     </div>
     <canvas :id="`${props.figi}-canvas`" class="h-full w-full"></canvas>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Candles } from ".prisma/client";
+// import { Candles } from ".prisma/client";
 import * as THREE from "three";
 import { IntervalKeys } from "~~/types/IntervalMap";
 import { TradeShare } from "~~/classes/Share";
@@ -21,19 +21,17 @@ const props = defineProps<{
   offset: string;
 }>();
 
-const candles =
-  (
-    await useFetch(
-      `/api/candles/${props.figi}/${props.interval}/${props.date}/db?offset=${props.offset}`
-    )
-  ).data.value?.candles || [];
-// TODO: figure out with SerializeObject type
-const tradeShare = new TradeShare(candles as unknown as Candles[]);
+const tradeShare = new TradeShare({
+  interval: props.interval,
+  figi: props.figi,
+  startDate: props.date,
+});
+await tradeShare.getCandles();
 tradeShare.addMA(60);
 const { high, low, data } = tradeShare.getTextureData();
 const candleTexture = new THREE.DataTexture(
   data,
-  candles.length,
+  tradeShare.size.value,
   1,
   THREE.RGBAFormat,
   THREE.FloatType
@@ -52,7 +50,7 @@ function main() {
   const planeMat = new THREE.ShaderMaterial({
     uniforms: {
       u_resolution: { value: widget.getCanvasSize() },
-      u_grid: { value: new THREE.Vector2(candles.length, 4) },
+      u_grid: { value: new THREE.Vector2(tradeShare.candles.value.length, 4) },
       u_grid_offset: { value: new THREE.Vector2(0, 0) },
       u_hl: { value: new THREE.Vector2(high, low) },
       u_candles: { value: candleTexture },

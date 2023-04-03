@@ -1,22 +1,47 @@
 import { Candles } from "@prisma/client";
+import { IntervalKeys } from "~~/types/IntervalMap";
 
 interface ITradeCandle extends Candles {
   closeSum?: number;
   ma?: Record<number, number | null>;
 }
 
+interface ITradeShare {
+  interval: IntervalKeys;
+  figi: string;
+  startDate: string;
+}
 export class TradeShare {
-  dateCandles: Record<string, ITradeCandle>;
-  candles: ITradeCandle[];
+  dateCandles: Record<string, ITradeCandle> = {};
+  candles = ref<ITradeCandle[]>([]);
+  size = computed(() => this.candles.value.length);
+  interval: IntervalKeys;
+  figi: string;
+  startDate: string;
 
-  constructor(data: Candles[]) {
-    this.candles = data;
-    this.dateCandles = this.parseCandles(data);
+  constructor(data: ITradeShare) {
+    // this.candles = data.candles;
+    // this.dateCandles = this.parseCandles(data.candles);
+    this.interval = data.interval;
+    this.figi = data.figi;
+    this.startDate = data.startDate;
+  }
+
+  async getCandles() {
+    const candles = (
+      await useFetch(
+        `/api/candles/${this.figi}/${this.interval}/${this.startDate}/db?offset=1d`
+      )
+    ).data;
+    if (candles.value) {
+      // TODO: figure out with SerializeObject type
+      this.candles = candles as unknown as Ref<Candles[]>;
+    }
   }
 
   getTextureData() {
-    const candleData = this.candles;
-    const numCandles = this.candles.length;
+    const candleData = this.candles.value;
+    const numCandles = this.candles.value.length;
     const width = numCandles + 1;
     const height = 4;
     const data = new Float32Array(width * height);
@@ -48,19 +73,20 @@ export class TradeShare {
 
   addSum() {
     let sum = 0;
-    this.candles.forEach((c) => {
+    this.candles.value.forEach((c) => {
       sum += c.close;
       c.closeSum = sum;
     });
   }
 
   addMA(n: number) {
-    if (this.candles[0] && !this.candles[0].closeSum) this.addSum();
+    const candles = this.candles.value;
+    if (candles[0] && !candles[0].closeSum) this.addSum();
 
-    for (let i = 0; i < this.candles.length; i++) {
-      const c = this.candles[i];
-      const curSum = this.candles[i]?.closeSum;
-      const prevSum = this.candles[i - n]?.closeSum;
+    for (let i = 0; i < candles.length; i++) {
+      const c = candles[i];
+      const curSum = candles[i]?.closeSum;
+      const prevSum = candles[i - n]?.closeSum;
 
       if (!c.ma) c.ma = {};
       c.ma[n] = curSum && prevSum ? (curSum - prevSum) / n : null;
