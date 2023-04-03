@@ -1,5 +1,5 @@
 <template>
-  <div v-if="tradeShare.size.value" class="h-full w-full relative">
+  <div class="h-full w-full relative">
     <div class="absolute top-0 left-0 text-gray-400">
       {{ figi }} - {{ tradeShare.size }}
     </div>
@@ -8,7 +8,6 @@
 </template>
 
 <script setup lang="ts">
-// import { Candles } from ".prisma/client";
 import * as THREE from "three";
 import { IntervalKeys } from "~~/types/IntervalMap";
 import { TradeShare } from "~~/classes/Share";
@@ -21,30 +20,36 @@ const props = defineProps<{
   offset: string;
 }>();
 
+const shaders = (await useFetch("/api/shaders")).data.value;
+
 const tradeShare = new TradeShare({
   interval: props.interval,
   figi: props.figi,
   startDate: props.date,
 });
-await tradeShare.getCandles();
-tradeShare.addMA(60);
-const { high, low, data } = tradeShare.getTextureData();
-const candleTexture = new THREE.DataTexture(
-  data,
-  tradeShare.size.value,
-  1,
-  THREE.RGBAFormat,
-  THREE.FloatType
-);
-candleTexture.needsUpdate = true;
 
-const shaders = (await useFetch("/api/shaders")).data.value;
-
-function main() {
+async function main() {
   const canvas: HTMLElement | null = document.querySelector(
     `#${props.figi}-canvas`
   );
+
   if (!canvas) return;
+
+  const dataSize = ref(Math.floor(canvas.clientWidth / 4));
+  await nextTick(async () => {
+    await tradeShare.getCandles(dataSize.value);
+  });
+  tradeShare.addMA(60);
+  const { high, low, data } = tradeShare.getTextureData();
+  const candleTexture = new THREE.DataTexture(
+    data,
+    tradeShare.size.value,
+    1,
+    THREE.RGBAFormat,
+    THREE.FloatType
+  );
+  candleTexture.needsUpdate = true;
+
   const widget = new Widget(canvas);
   const planeGeo = new THREE.PlaneGeometry();
   const planeMat = new THREE.ShaderMaterial({

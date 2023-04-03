@@ -1,5 +1,5 @@
 import { Candles } from "@prisma/client";
-import { IntervalKeys } from "~~/types/IntervalMap";
+import { IntervalKeys, IntervalTime } from "~~/types/IntervalMap";
 
 interface ITradeCandle extends Candles {
   closeSum?: number;
@@ -11,6 +11,7 @@ interface ITradeShare {
   figi: string;
   startDate: string;
 }
+
 export class TradeShare {
   dateCandles: Record<string, ITradeCandle> = {};
   candles = ref<ITradeCandle[]>([]);
@@ -20,22 +21,27 @@ export class TradeShare {
   startDate: string;
 
   constructor(data: ITradeShare) {
-    // this.candles = data.candles;
-    // this.dateCandles = this.parseCandles(data.candles);
     this.interval = data.interval;
     this.figi = data.figi;
     this.startDate = data.startDate;
   }
 
-  async getCandles() {
+  async getCandles(n: number) {
+    const oneDay = 1000 * 60 * 60 * 24;
+    const delta = n * IntervalTime[this.interval] * 1000 * 60 + oneDay;
+    const endDate = new Date(+new Date(this.startDate) + delta)
+      .toISOString()
+      .split("T")[0];
     const candles = (
       await useFetch(
-        `/api/candles/${this.figi}/${this.interval}/${this.startDate}/db?offset=1d`
+        `/api/candles/${this.figi}/${this.interval}/${this.startDate}/db?end=${endDate}`,
+        { server: false }
       )
     ).data;
     if (candles.value) {
       // TODO: figure out with SerializeObject type
-      this.candles = candles as unknown as Ref<Candles[]>;
+      this.candles.value = (candles as unknown as Ref<Candles[]>).value;
+      this.dateCandles = this.parseCandles();
     }
   }
 
@@ -60,7 +66,8 @@ export class TradeShare {
     return { high, low, data };
   }
 
-  parseCandles(data: Candles[]) {
+  parseCandles() {
+    const data = this.candles.value;
     const res: Record<string, Candles> = {};
 
     data.reduce((res, d) => {
