@@ -30,7 +30,7 @@ const candles =
 // TODO: figure out with SerializeObject type
 const tradeShare = new TradeShare(candles as unknown as Candles[]);
 tradeShare.addMA(60);
-const data = tradeShare.getTextureData();
+const { high, low, data } = tradeShare.getTextureData();
 const candleTexture = new THREE.DataTexture(
   data,
   candles.length,
@@ -47,16 +47,14 @@ function main() {
     `#${props.figi}-canvas`
   );
   if (!canvas) return;
-  const widget = new Widget(canvas, {
-    axisHelper: true,
-    orbitControls: true,
-  });
+  const widget = new Widget(canvas);
   const planeGeo = new THREE.PlaneGeometry();
   const planeMat = new THREE.ShaderMaterial({
     uniforms: {
       u_resolution: { value: widget.getCanvasSize() },
       u_grid: { value: new THREE.Vector2(candles.length, 4) },
       u_grid_offset: { value: new THREE.Vector2(0, 0) },
+      u_hl: { value: new THREE.Vector2(high, low) },
       u_candles: { value: candleTexture },
     },
     fragmentShader: shaders?.fragment || ``,

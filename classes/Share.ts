@@ -17,18 +17,22 @@ export class TradeShare {
   getTextureData() {
     const candleData = this.candles;
     const numCandles = this.candles.length;
-    const width = numCandles;
+    const width = numCandles + 1;
     const height = 4;
     const data = new Float32Array(width * height);
+    let high;
+    let low;
 
     for (let i = 0; i < numCandles; i++) {
       data[i * height] = candleData[i].open;
       data[i * height + 1] = candleData[i].high;
       data[i * height + 2] = candleData[i].low;
       data[i * height + 3] = candleData[i].close;
+      high = high ? Math.max(high, candleData[i].high) : candleData[i].high;
+      low = low ? Math.min(low, candleData[i].low) : candleData[i].low;
     }
 
-    return data;
+    return { high, low, data };
   }
 
   parseCandles(data: Candles[]) {
