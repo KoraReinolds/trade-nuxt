@@ -27,9 +27,11 @@ const tradeShare = new TradeShare({
   startDate: props.date,
 });
 
+const dataSize = 300;
 await tradeShare.getCandles(600);
-// const dataSize = ref(Math.floor(canvas.clientWidth / 4));
 tradeShare.addMA(60);
+tradeShare.getData(dataSize);
+
 const { high, low, data } = tradeShare.getTextureData();
 const candleTexture = new THREE.DataTexture(
   data,
@@ -40,6 +42,8 @@ const candleTexture = new THREE.DataTexture(
 );
 candleTexture.needsUpdate = true;
 
+const wid: Ref<Widget | null> = ref(null);
+
 function main() {
   const canvas: HTMLElement | null = document.querySelector(
     `#${props.figi}-canvas`
@@ -48,11 +52,12 @@ function main() {
   if (!canvas) return;
 
   const widget = new Widget(canvas);
+  wid.value = widget;
   const planeGeo = new THREE.PlaneGeometry();
   const planeMat = new THREE.ShaderMaterial({
     uniforms: {
       u_resolution: { value: widget.getCanvasSize() },
-      u_grid: { value: new THREE.Vector2(tradeShare.size.value, 4) },
+      u_grid: { value: new THREE.Vector2(dataSize, 4) },
       u_grid_offset: { value: new THREE.Vector2(0, 0) },
       u_hl: { value: new THREE.Vector2(high, low) },
       u_candles: { value: candleTexture },

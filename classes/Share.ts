@@ -9,11 +9,22 @@ export class TradeShare {
   interval: IntervalKeys;
   figi: string;
   startDate: string;
+  data = ref<(ITradeCandle | undefined)[]>([]);
 
   constructor(data: ITradeShare) {
     this.interval = data.interval;
     this.figi = data.figi;
     this.startDate = data.startDate;
+  }
+
+  getData(n: number) {
+    const data = [...Array(n).keys()].map((i) => {
+      const delta = i * IntervalTime[this.interval] * 1000 * 60;
+      const date = new Date(+new Date(this.startDate) - delta);
+
+      return this.dateCandles[date.toISOString()];
+    });
+    this.data = ref(data);
   }
 
   async getCandles(n: number) {
@@ -35,7 +46,7 @@ export class TradeShare {
   }
 
   getTextureData() {
-    const candleData = this.candles.value;
+    const candleData = this.data.value;
     const numCandles = this.candles.value.length;
     const width = numCandles + 1;
     const height = 4;
@@ -44,12 +55,15 @@ export class TradeShare {
     let low;
 
     for (let i = 0; i < numCandles; i++) {
-      data[i * height] = candleData[i].open;
-      data[i * height + 1] = candleData[i].high;
-      data[i * height + 2] = candleData[i].low;
-      data[i * height + 3] = candleData[i].close;
-      high = high ? Math.max(high, candleData[i].high) : candleData[i].high;
-      low = low ? Math.min(low, candleData[i].low) : candleData[i].low;
+      const candle = candleData[i];
+      if (candle) {
+        data[i * height] = candle.open;
+        data[i * height + 1] = candle.high;
+        data[i * height + 2] = candle.low;
+        data[i * height + 3] = candle.close;
+        high = high ? Math.max(high, candle.high) : candle.high;
+        low = low ? Math.min(low, candle.low) : candle.low;
+      }
     }
 
     return { high, low, data };
@@ -60,7 +74,7 @@ export class TradeShare {
     const res: Record<string, Candles> = {};
 
     data.reduce((res, d) => {
-      res[d.time.toString()] = d;
+      res[new Date(d.time).toISOString()] = d;
       return res;
     }, res);
 
