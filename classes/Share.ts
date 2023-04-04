@@ -19,12 +19,12 @@ export class TradeShare {
   async getCandles(n: number) {
     const oneDay = 1000 * 60 * 60 * 24;
     const delta = n * IntervalTime[this.interval] * 1000 * 60 + oneDay;
-    const endDate = new Date(+new Date(this.startDate) + delta)
+    const endDate = new Date(+new Date(this.startDate) - delta)
       .toISOString()
       .split("T")[0];
     const candles = (
       await useFetch(
-        `/api/candles/${this.figi}/${this.interval}/${this.startDate}/db?end=${endDate}`
+        `/api/candles/${this.figi}/${this.interval}/${endDate}/db?end=${this.startDate}`
       )
     ).data;
     if (candles.value) {

@@ -27,7 +27,7 @@ float grid(vec2 uv,vec2 scale,vec2 thickness){
   vec2 grid_uv=uv;
   grid_uv=fract(grid_uv*scale);
   vec2 ps=thickness*scale;
-  float grid_x=fill(grid_uv.x,ps.x);
+  float grid_x=stroke(grid_uv.x,.5,ps.x);
   float grid_y=fill(grid_uv.y,ps.y);
   
   return max(grid_x,grid_y);
@@ -51,7 +51,7 @@ void main(){
   
   float i=floor((uv.x*u_grid.x))/u_grid.x;
   vec2 grid_uv=fract(uv*u_grid);
-  vec4 data=texture2D(u_candles,vec2(i,0));
+  vec4 data=texture2D(u_candles,vec2(1.-i,0));
   float high=u_hl.r;
   float low=u_hl.g;
   float height=high-low;

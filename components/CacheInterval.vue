@@ -14,7 +14,7 @@ const props = defineProps<{
 }>();
 const cache = (await useFetch(`/api/candles/${props.figi}/${props.interval}`))
   .data;
-const startDate = "2021-01-01";
+const startDate = "2022-01-01";
 const startInterval = ref("");
 const endInterval = ref("");
 if (Array.isArray(cache.value)) {

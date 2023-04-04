@@ -17,7 +17,6 @@ const props = defineProps<{
   figi: string;
   date: string;
   interval: IntervalKeys;
-  offset: string;
 }>();
 
 const shaders = (await useFetch("/api/shaders")).data.value;
