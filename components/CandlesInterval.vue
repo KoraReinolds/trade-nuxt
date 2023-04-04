@@ -28,34 +28,32 @@ const tradeShare = new TradeShare({
   startDate: props.date,
 });
 
-async function main() {
+await tradeShare.getCandles(600);
+// const dataSize = ref(Math.floor(canvas.clientWidth / 4));
+tradeShare.addMA(60);
+const { high, low, data } = tradeShare.getTextureData();
+const candleTexture = new THREE.DataTexture(
+  data,
+  tradeShare.size.value,
+  1,
+  THREE.RGBAFormat,
+  THREE.FloatType
+);
+candleTexture.needsUpdate = true;
+
+function main() {
   const canvas: HTMLElement | null = document.querySelector(
     `#${props.figi}-canvas`
   );
 
   if (!canvas) return;
 
-  const dataSize = ref(Math.floor(canvas.clientWidth / 4));
-  await nextTick(async () => {
-    await tradeShare.getCandles(dataSize.value);
-  });
-  tradeShare.addMA(60);
-  const { high, low, data } = tradeShare.getTextureData();
-  const candleTexture = new THREE.DataTexture(
-    data,
-    tradeShare.size.value,
-    1,
-    THREE.RGBAFormat,
-    THREE.FloatType
-  );
-  candleTexture.needsUpdate = true;
-
   const widget = new Widget(canvas);
   const planeGeo = new THREE.PlaneGeometry();
   const planeMat = new THREE.ShaderMaterial({
     uniforms: {
       u_resolution: { value: widget.getCanvasSize() },
-      u_grid: { value: new THREE.Vector2(tradeShare.candles.value.length, 4) },
+      u_grid: { value: new THREE.Vector2(tradeShare.size.value, 4) },
       u_grid_offset: { value: new THREE.Vector2(0, 0) },
       u_hl: { value: new THREE.Vector2(high, low) },
       u_candles: { value: candleTexture },

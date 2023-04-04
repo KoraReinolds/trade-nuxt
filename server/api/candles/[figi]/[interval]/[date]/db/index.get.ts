@@ -12,7 +12,9 @@ export default defineEventHandler(async (event) => {
 
   const candles = await loadCandlesFromDB({
     where: {
-      shares: figi,
+      shares: {
+        in: figi.split(","),
+      },
       type: CandleType[IntervalMap[interval]],
       time: {
         lte: dates.to,

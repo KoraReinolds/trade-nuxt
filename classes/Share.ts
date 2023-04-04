@@ -1,16 +1,6 @@
 import { Candles } from "@prisma/client";
 import { IntervalKeys, IntervalTime } from "~~/types/IntervalMap";
-
-interface ITradeCandle extends Candles {
-  closeSum?: number;
-  ma?: Record<number, number | null>;
-}
-
-interface ITradeShare {
-  interval: IntervalKeys;
-  figi: string;
-  startDate: string;
-}
+import { ITradeCandle, ITradeShare } from "~~/types/Share";
 
 export class TradeShare {
   dateCandles: Record<string, ITradeCandle> = {};
@@ -34,8 +24,7 @@ export class TradeShare {
       .split("T")[0];
     const candles = (
       await useFetch(
-        `/api/candles/${this.figi}/${this.interval}/${this.startDate}/db?end=${endDate}`,
-        { server: false }
+        `/api/candles/${this.figi}/${this.interval}/${this.startDate}/db?end=${endDate}`
       )
     ).data;
     if (candles.value) {

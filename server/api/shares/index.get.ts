@@ -11,14 +11,13 @@ export default defineEventHandler(async (event) => {
   const { figi, skip, take } = query;
   const loadSharesReq: Prisma.SharesFindManyArgs = {
     where: {},
-    skip: 0,
-    take: 10,
   };
 
   if (take && typeof +take === "number") loadSharesReq.take = +take;
   if (skip && typeof +skip === "number") loadSharesReq.skip = +skip;
-  if (typeof figi === "string")
+  if (typeof figi === "string") {
     loadSharesReq.where = { figi: { in: figi.split(",") } };
+  }
 
   return await loadShares(loadSharesReq);
 });

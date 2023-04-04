@@ -18,7 +18,6 @@ import { IntervalKeys } from "~~/types/IntervalMap";
 
 const route = useRoute();
 const cachedShares = (await useFetch("/api/candles")).data;
-// const figi = cachedShares.value?.[0] || "";
 const interval: IntervalKeys = (route.query.route as IntervalKeys) || "15_min";
 const date = (route.query.date as string) || "2021-01-01";
 const offset = (route.query.offset as string) || "1w";
