@@ -1,7 +1,7 @@
 <template>
   <div class="h-full w-full relative">
     <div class="absolute top-0 left-0 text-gray-400">
-      {{ figi }} - {{ tradeShare.size }}
+      {{ figi }} - {{ dataSize }}
     </div>
     <canvas :id="`${props.figi}-canvas`" class="h-full w-full"></canvas>
   </div>
@@ -19,28 +19,30 @@ const props = defineProps<{
   interval: IntervalKeys;
 }>();
 
-const shaders = (await useFetch("/api/shaders")).data.value;
+const createCandleTexture = (data: Float32Array) => {
+  const candleTexture = new THREE.DataTexture(
+    data,
+    data.length / 4,
+    1,
+    THREE.RGBAFormat,
+    THREE.FloatType
+  );
+  candleTexture.needsUpdate = true;
+  return candleTexture;
+};
 
+const shaders = (await useFetch("/api/shaders")).data.value;
 const tradeShare = new TradeShare({
   interval: props.interval,
   figi: props.figi,
-  startDate: props.date,
+  date: props.date,
 });
 
-const dataSize = 300;
+const dataSize = 20;
 await tradeShare.getCandles(600);
 tradeShare.addMA(60);
-tradeShare.getData(dataSize);
 
-const { high, low, data } = tradeShare.getTextureData();
-const candleTexture = new THREE.DataTexture(
-  data,
-  tradeShare.size.value,
-  1,
-  THREE.RGBAFormat,
-  THREE.FloatType
-);
-candleTexture.needsUpdate = true;
+const candleTexture = ref(createCandleTexture(new Float32Array()));
 
 const wid: Ref<Widget | null> = ref(null);
 
@@ -59,8 +61,8 @@ function main() {
       u_resolution: { value: widget.getCanvasSize() },
       u_grid: { value: new THREE.Vector2(dataSize, 4) },
       u_grid_offset: { value: new THREE.Vector2(0, 0) },
-      u_hl: { value: new THREE.Vector2(high, low) },
-      u_candles: { value: candleTexture },
+      u_hl: { value: new THREE.Vector2(0, 0) },
+      u_candles: { value: candleTexture.value },
     },
     fragmentShader: shaders?.fragment || ``,
     vertexShader: shaders?.vertex || ``,
@@ -73,6 +75,17 @@ function main() {
   const planeMesh = new THREE.Mesh(planeGeo, planeMat);
   widget.scene.add(planeMesh);
   planeMesh.position.set(0.5, 0.5, 0);
+
+  watch(candleTexture, (texture) => {
+    planeMat.uniforms.u_candles.value = texture;
+  });
+  watch(tradeShare.endDate, () => tradeShare.getData(dataSize));
+  watch(tradeShare.data, () => {
+    const { high, low, data } = tradeShare.getTextureData();
+    planeMat.uniforms.u_hl.value = new THREE.Vector2(high, low);
+    candleTexture.value = createCandleTexture(data);
+  });
+  tradeShare.getData(dataSize);
 }
 
 onMounted(main);
