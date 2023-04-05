@@ -9,5 +9,5 @@ export interface ITradeCandle extends Candles {
 export interface ITradeShare {
   interval: IntervalKeys;
   figi: string;
-  startDate: string;
+  date: string;
 }

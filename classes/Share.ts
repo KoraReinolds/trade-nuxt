@@ -5,37 +5,42 @@ import { ITradeCandle, ITradeShare } from "~~/types/Share";
 export class TradeShare {
   dateCandles: Record<string, ITradeCandle> = {};
   candles = ref<ITradeCandle[]>([]);
-  size = computed(() => this.candles.value.length);
   interval: IntervalKeys;
   figi: string;
-  startDate: string;
+  endDate = ref("");
   data = ref<(ITradeCandle | undefined)[]>([]);
 
   constructor(data: ITradeShare) {
     this.interval = data.interval;
     this.figi = data.figi;
-    this.startDate = data.startDate;
+    this.endDate.value = data.date;
+  }
+
+  shiftEndDate(delta: number) {
+    return new Date(
+      +new Date(this.endDate.value) + delta * 1000 * 60
+    ).toISOString();
   }
 
   getData(n: number) {
     const data = [...Array(n).keys()].map((i) => {
-      const delta = i * IntervalTime[this.interval] * 1000 * 60;
-      const date = new Date(+new Date(this.startDate) - delta);
+      const delta = i * IntervalTime[this.interval];
+      const date = this.shiftEndDate(-delta);
 
-      return this.dateCandles[date.toISOString()];
+      return this.dateCandles[date];
     });
-    this.data = ref(data);
+    this.data.value = data;
+
+    return data;
   }
 
   async getCandles(n: number) {
-    const oneDay = 1000 * 60 * 60 * 24;
-    const delta = n * IntervalTime[this.interval] * 1000 * 60 + oneDay;
-    const endDate = new Date(+new Date(this.startDate) - delta)
-      .toISOString()
-      .split("T")[0];
+    const oneDay = 60 * 24;
+    const delta = n * IntervalTime[this.interval] + oneDay;
+    const startDate = this.shiftEndDate(-delta);
     const candles = (
       await useFetch(
-        `/api/candles/${this.figi}/${this.interval}/${endDate}/db?end=${this.startDate}`
+        `/api/candles/${this.figi}/${this.interval}/${startDate}/db?end=${this.endDate.value}`
       )
     ).data;
     if (candles.value) {
@@ -47,20 +52,19 @@ export class TradeShare {
 
   getTextureData() {
     const candleData = this.data.value;
-    const numCandles = this.candles.value.length;
-    const width = numCandles + 1;
-    const height = 4;
-    const data = new Float32Array(width * height);
+    const width = this.data.value.length;
+    const data = new Float32Array(width * 4);
     let high;
     let low;
 
-    for (let i = 0; i < numCandles; i++) {
+    for (let i = 0; i < width; i++) {
       const candle = candleData[i];
       if (candle) {
-        data[i * height] = candle.open;
-        data[i * height + 1] = candle.high;
-        data[i * height + 2] = candle.low;
-        data[i * height + 3] = candle.close;
+        const shift = i * 4;
+        data[shift] = candle.open;
+        data[shift + 1] = candle.high;
+        data[shift + 2] = candle.low;
+        data[shift + 3] = candle.close;
         high = high ? Math.max(high, candle.high) : candle.high;
         low = low ? Math.min(low, candle.low) : candle.low;
       }
