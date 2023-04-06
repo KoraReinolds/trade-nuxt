@@ -1,10 +1,8 @@
-import { Candles } from "@prisma/client";
 import { IntervalKeys, IntervalTime } from "~~/types/IntervalMap";
 import { ITradeCandle, ITradeShare } from "~~/types/Share";
 
 export class TradeShare {
-  dateCandles: Record<string, ITradeCandle> = {};
-  candles = ref<ITradeCandle[]>([]);
+  dateCandles: Ref<Record<string, ITradeCandle>> = ref({});
   interval: IntervalKeys;
   figi: string;
   endDate = ref("");
@@ -30,7 +28,7 @@ export class TradeShare {
       const delta = i * IntervalTime[this.interval];
       const date = this.shiftEndDate(-delta);
 
-      return this.dateCandles[date];
+      return this.dateCandles.value[date];
     });
     this.data.value = data;
 
@@ -46,17 +44,24 @@ export class TradeShare {
         `/api/candles/${this.figi}/${this.interval}/${startDate}/db?end=${this.endDate.value}`
       )
     ).data;
-    if (candles.value) {
-      // TODO: figure out with SerializeObject type
-      this.candles.value = (candles as unknown as Ref<Candles[]>).value;
-      this.dateCandles = this.parseCandles();
-    }
+
+    const res = this.dateCandles.value;
+
+    if (!candles.value) return res;
+
+    candles.value.reduce((d, candle) => {
+      const { time, ...rawCandle } = candle;
+      d[new Date(time).toISOString()] = markRaw(rawCandle);
+      return d;
+    }, res);
+
+    return res;
   }
 
   getTextureData() {
     const candleData = this.data.value;
     const width = this.data.value.length;
-    const data = new Float32Array(width * 4);
+    const candles = new Float32Array(width * 4);
     let high;
     let low;
 
@@ -64,40 +69,32 @@ export class TradeShare {
       const candle = candleData[i];
       if (candle) {
         const shift = i * 4;
-        data[shift] = candle.open;
-        data[shift + 1] = candle.high;
-        data[shift + 2] = candle.low;
-        data[shift + 3] = candle.close;
+        candles[shift] = candle.open;
+        candles[shift + 1] = candle.high;
+        candles[shift + 2] = candle.low;
+        candles[shift + 3] = candle.close;
         high = high ? Math.max(high, candle.high) : candle.high;
         low = low ? Math.min(low, candle.low) : candle.low;
       }
     }
 
+    const data = {
+      candles,
+    };
+
     return { high, low, data };
-  }
-
-  parseCandles() {
-    const data = this.candles.value;
-    const res: Record<string, Candles> = {};
-
-    data.reduce((res, d) => {
-      res[new Date(d.time).toISOString()] = d;
-      return res;
-    }, res);
-
-    return res;
   }
 
   addSum() {
     let sum = 0;
-    this.candles.value.forEach((c) => {
+    Object.values(this.dateCandles.value).forEach((c) => {
       sum += c.close;
       c.closeSum = sum;
     });
   }
 
   addMA(n: number) {
-    const candles = this.candles.value;
+    const candles = Object.values(this.dateCandles.value);
     if (candles[0] && !candles[0].closeSum) this.addSum();
 
     for (let i = 0; i < candles.length; i++) {

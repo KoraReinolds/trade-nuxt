@@ -39,8 +39,9 @@ const tradeShare = new TradeShare({
 });
 
 const dataSize = Widget.dataSize;
-await tradeShare.getCandles(600);
+await tradeShare.getCandles(60 * 24 * 90);
 tradeShare.addMA(60);
+tradeShare.addMA(200);
 
 const candleTexture = ref(createCandleTexture(new Float32Array()));
 
@@ -83,7 +84,7 @@ function main() {
   watch(tradeShare.data, () => {
     const { high, low, data } = tradeShare.getTextureData();
     planeMat.uniforms.u_hl.value = new THREE.Vector2(high, low);
-    candleTexture.value = createCandleTexture(data);
+    candleTexture.value = createCandleTexture(data.candles);
   });
   tradeShare.getData(dataSize);
 }
