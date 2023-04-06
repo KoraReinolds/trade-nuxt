@@ -50,6 +50,7 @@ void main(){
   );
   
   float i=floor((uv.x*u_grid.x))/u_grid.x;
+  i+=.5/u_grid.x;
   vec2 grid_uv=fract(uv*u_grid);
   vec4 data=texture2D(u_candles,vec2(1.-i,0));
   float high=u_hl.r;
