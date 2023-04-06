@@ -9,11 +9,14 @@ export class TradeShare {
   figi: string;
   endDate = ref("");
   data = ref<(ITradeCandle | undefined)[]>([]);
+  /* eslint-disable no-use-before-define */
+  static shares: TradeShare[] = [];
 
   constructor(data: ITradeShare) {
     this.interval = data.interval;
     this.figi = data.figi;
     this.endDate.value = data.date;
+    TradeShare.shares.push(this);
   }
 
   shiftEndDate(delta: number) {

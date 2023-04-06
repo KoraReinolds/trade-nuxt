@@ -1,5 +1,9 @@
 <template>
-  <div class="h-screen flex flex-col">
+  <div
+    class="h-screen flex flex-col"
+    @auxclick="shiftEndDate(-oneDay)"
+    @click="shiftEndDate(oneDay)"
+  >
     <CandlesInterval
       v-for="figi in cachedShares"
       :key="figi"
@@ -13,10 +17,20 @@
 </template>
 
 <script setup lang="ts">
-import { IntervalKeys } from "~~/types/IntervalMap";
+import { TradeShare } from "~~/classes/Share";
+import { Widget } from "~~/classes/Widget";
+import { IntervalKeys, IntervalTime } from "~~/types/IntervalMap";
 
 const route = useRoute();
 const cachedShares = (await useFetch("/api/candles")).data;
 const interval: IntervalKeys = (route.query.route as IntervalKeys) || "15_min";
 const date = (route.query.date as string) || "2022-01-01";
+const oneDay = 24 * 60;
+Widget.dataSize = oneDay / IntervalTime[interval];
+
+const shiftEndDate = (delta: number) => {
+  TradeShare.shares.forEach((tradeShare) => {
+    tradeShare.endDate.value = tradeShare.shiftEndDate(delta);
+  });
+};
 </script>

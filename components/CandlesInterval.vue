@@ -1,7 +1,7 @@
 <template>
   <div class="h-full w-full relative">
     <div class="absolute top-0 left-0 text-gray-400">
-      {{ figi }} - {{ dataSize }}
+      {{ figi }} - {{ dataSize }} - {{ tradeShare.endDate }}
     </div>
     <canvas :id="`${props.figi}-canvas`" class="h-full w-full"></canvas>
   </div>
@@ -38,7 +38,7 @@ const tradeShare = new TradeShare({
   date: props.date,
 });
 
-const dataSize = 20;
+const dataSize = Widget.dataSize;
 await tradeShare.getCandles(600);
 tradeShare.addMA(60);
 

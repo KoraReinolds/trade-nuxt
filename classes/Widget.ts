@@ -17,6 +17,9 @@ export class Widget {
   scene: THREE.Scene;
   camera: THREE.OrthographicCamera;
   controls: OrbitControls | undefined;
+  canvasWidth = ref(0);
+  canvasHeight = ref(0);
+  static dataSize = 0;
 
   constructor(canvas: HTMLElement, options?: IOptions) {
     const opt = { ...defaultOptions, ...options };
@@ -53,12 +56,14 @@ export class Widget {
     const needResize = canvas.width !== width || canvas.height !== height;
     if (needResize) {
       this.renderer.setSize(width, height, false);
+      this.canvasWidth.value = width;
+      this.canvasHeight.value = height;
     }
     return needResize;
   }
 
   getCanvasSize() {
-    return new THREE.Vector2(this.canvas.clientWidth, this.canvas.clientHeight);
+    return new THREE.Vector2(this.canvasWidth.value, this.canvasHeight.value);
   }
 
   addActionBeforeRender(f: Function) {
