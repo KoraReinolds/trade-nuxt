@@ -27,6 +27,8 @@ export default defineEventHandler(async (event) => {
       open: true,
       close: true,
       time: true,
+      id: true,
+      shares: true,
     },
   });
   return candles || [];

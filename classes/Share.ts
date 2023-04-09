@@ -1,5 +1,7 @@
+import { Candles } from "@prisma/client";
 import { IntervalKeys, IntervalTime } from "~~/types/IntervalMap";
 import { ITradeCandle, ITradeShare } from "~~/types/Share";
+import { IndexedDB } from "~~/classes/IndexedDB";
 
 export class TradeShare {
   dateCandles: Ref<Record<string, ITradeCandle>> = ref({});
@@ -49,11 +51,16 @@ export class TradeShare {
 
     if (!candles.value) return res;
 
-    candles.value.reduce((d, candle) => {
-      const { time, ...rawCandle } = candle;
-      d[new Date(time).toISOString()] = markRaw(rawCandle);
-      return d;
-    }, res);
+    if (process.client) {
+      const db = new IndexedDB();
+      await db.init();
+      candles.value = candles.value.map((candle) => {
+        const rawCandle = markRaw({ ...candle });
+        res[new Date(rawCandle.time).toISOString()] = rawCandle;
+        return rawCandle;
+      });
+      db.add([...candles.value] as unknown as Candles[]);
+    }
 
     return res;
   }

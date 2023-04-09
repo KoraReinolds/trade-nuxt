@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+import { IndexedDB } from "~~/classes/IndexedDB";
 import { TradeShare } from "~~/classes/Share";
 import { Widget } from "~~/classes/Widget";
 import { IntervalKeys, IntervalTime } from "~~/types/IntervalMap";
@@ -33,4 +34,15 @@ const shiftEndDate = (delta: number) => {
     tradeShare.endDate.value = tradeShare.shiftEndDate(delta);
   });
 };
+
+if (process.client) {
+  const db = new IndexedDB();
+  await db.init();
+
+  const res = await db.searchByIndex(
+    "time",
+    IDBKeyRange.bound("2021-01-01T04:00:00.000Z", "2022-01-01T06:15:00.000Z")
+  );
+  console.log(res);
+}
 </script>

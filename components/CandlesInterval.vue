@@ -39,7 +39,7 @@ const tradeShare = new TradeShare({
 });
 
 const dataSize = Widget.dataSize;
-await tradeShare.getCandles(60 * 24 * 90);
+await tradeShare.getCandles(60 * 24);
 tradeShare.addMA(60);
 tradeShare.addMA(200);
 
