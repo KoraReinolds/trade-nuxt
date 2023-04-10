@@ -53,7 +53,7 @@ export class TradeShare {
 
     if (process.client) {
       const db = new IndexedDB();
-      await db.init();
+      await db.init(this.figi);
       candles.value = candles.value.map((candle) => {
         const rawCandle = markRaw({ ...candle });
         res[new Date(rawCandle.time).toISOString()] = rawCandle;
@@ -63,6 +63,14 @@ export class TradeShare {
     }
 
     return res;
+  }
+
+  parseDataFromStorage(candles: Candles[]) {
+    const res = this.dateCandles.value;
+
+    candles.forEach((candle) => {
+      res[new Date(candle.time).toISOString()] = candle;
+    });
   }
 
   getTextureData() {

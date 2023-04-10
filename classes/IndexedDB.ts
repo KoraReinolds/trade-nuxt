@@ -1,20 +1,20 @@
 import { Candles } from "@prisma/client";
 
-const dbName = "candlestickDB";
-const objectStoreName = "candlesticks";
 const version = 1;
 
 export class IndexedDB {
   static db: IDBDatabase;
+  name = "";
 
-  init() {
-    const request = indexedDB.open(dbName, version);
+  init(name: string) {
+    this.name = name;
+    const request = indexedDB.open(name, version);
 
     return new Promise((_resolve) => {
       request.onupgradeneeded = function () {
         const db = request.result;
 
-        const objectStore = db.createObjectStore(objectStoreName, {});
+        const objectStore = db.createObjectStore(name, {});
 
         objectStore.createIndex("time", "time", { unique: true });
 
@@ -29,28 +29,42 @@ export class IndexedDB {
     });
   }
 
+  static clearDB(names: string[]) {
+    names.forEach((name) => {
+      indexedDB.deleteDatabase(name);
+    });
+  }
+
   add(data: Candles[]) {
     const objectStore = IndexedDB.db
-      .transaction(objectStoreName, "readwrite")
-      .objectStore(objectStoreName);
+      .transaction(this.name, "readwrite")
+      .objectStore(this.name);
 
     for (const item of data) {
       objectStore.add(item, item.id);
     }
   }
 
-  searchByIndex(index: string, query?: IDBKeyRange): Promise<Candles> {
+  searchByIndex(index: string, query?: IDBKeyRange): Promise<Candles[]> {
     return new Promise((_resolve, _reject) => {
       const request = IndexedDB.db
-        .transaction(objectStoreName, "readonly")
-        .objectStore(objectStoreName)
+        .transaction(this.name, "readonly")
+        .objectStore(this.name)
         .index(index)
-        .getAll(query);
+        .openCursor(query);
 
-      request.onsuccess = function (event) {
-        const target = event.target as IDBRequest;
-        const candlesticks = target.result as Candles;
-        _resolve(candlesticks);
+      const result: Candles[] = [];
+
+      request.onsuccess = function () {
+        const cursor = request.result;
+
+        if (cursor) {
+          const candlestick = cursor.value as Candles;
+          result.push(candlestick);
+          cursor.continue();
+        } else {
+          _resolve(result);
+        }
       };
 
       request.onerror = function (event) {

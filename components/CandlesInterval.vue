@@ -12,6 +12,7 @@ import * as THREE from "three";
 import { IntervalKeys } from "~~/types/IntervalMap";
 import { TradeShare } from "~~/classes/Share";
 import { Widget } from "~~/classes/Widget";
+import { IndexedDB } from "~~/classes/IndexedDB";
 
 const props = defineProps<{
   figi: string;
@@ -39,9 +40,6 @@ const tradeShare = new TradeShare({
 });
 
 const dataSize = Widget.dataSize;
-await tradeShare.getCandles(60 * 24);
-tradeShare.addMA(60);
-tradeShare.addMA(200);
 
 const candleTexture = ref(createCandleTexture(new Float32Array()));
 
@@ -86,7 +84,23 @@ function main() {
     planeMat.uniforms.u_hl.value = new THREE.Vector2(high, low);
     candleTexture.value = createCandleTexture(data.candles);
   });
-  tradeShare.getData(dataSize);
+  nextTick(async () => {
+    const start = performance.now();
+    if (process.client) {
+      const db = new IndexedDB();
+      await db.init(props.figi);
+
+      const res = await db.searchByIndex("time");
+      if (res.length) {
+        tradeShare.parseDataFromStorage(res);
+      } else {
+        await tradeShare.getCandles(24 * 60 * 360);
+      }
+      tradeShare.getData(dataSize);
+    }
+    tradeShare.getData(dataSize);
+    console.log("delta", performance.now() - start);
+  });
 }
 
 onMounted(main);
